@@ -7,7 +7,7 @@ from typing import Any
 
 import requests
 
-BASE_URL = "http://ergast.com/api/f1"
+BASE_URL = "https://api.jolpi.ca/ergast/f1"
 CACHE_DIR = Path(".cache")
 TIMEOUT = 10
 
@@ -66,9 +66,9 @@ def fetch_lap_times(season: int, round_num: int) -> dict[str, Any]:
     if cached is not None:
         return cached
 
-    all_laps: list[dict] = []
+    all_laps_by_num: dict[int, dict] = {}
     offset = 0
-    limit = 2000
+    limit = 1000
 
     while True:
         url = f"{BASE_URL}/{season}/{round_num}/laps.json?limit={limit}&offset={offset}"
@@ -82,12 +82,23 @@ def fetch_lap_times(season: int, round_num: int) -> dict[str, Any]:
         laps = races[0].get("Laps", [])
         if not laps:
             break
-        all_laps.extend(laps)
+        entries_this_page = 0
+        for lap in laps:
+            entries_this_page += len(lap.get("Timings", []))
+            lap_num = int(lap["number"])
+            if lap_num in all_laps_by_num:
+                existing_ids = {t["driverId"] for t in all_laps_by_num[lap_num]["Timings"]}
+                for timing in lap["Timings"]:
+                    if timing["driverId"] not in existing_ids:
+                        all_laps_by_num[lap_num]["Timings"].append(timing)
+            else:
+                all_laps_by_num[lap_num] = lap
         total = int(data["MRData"]["total"])
-        offset += limit
-        if offset >= total:
+        offset += entries_this_page
+        if offset >= total or entries_this_page == 0:
             break
 
+    all_laps = [all_laps_by_num[k] for k in sorted(all_laps_by_num)]
     result = {"Laps": all_laps}
     if all_laps:
         result["raceName"] = races[0].get("raceName", "")
