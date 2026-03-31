@@ -4,24 +4,27 @@ from typing import Any
 
 import pandas as pd
 
-# Real F1 team colors (2023/2024 season)
+# Real F1 team colors (Updated for F1 TV Telemetry accurate graphics)
 TEAM_COLORS: dict[str, str] = {
-    "Red Bull": "#3671C6",
-    "Mercedes": "#6CD3BF",
-    "Ferrari": "#F91536",
-    "McLaren": "#FF8000",
-    "Aston Martin": "#358C75",
-    "Alpine F1 Team": "#2293D1",
-    "Williams": "#64C4FF",
-    "AlphaTauri": "#5E8FAA",
-    "RB F1 Team": "#6692FF",
-    "Alfa Romeo": "#C92D4B",
-    "Haas F1 Team": "#B6BABD",
-    "Racing Point": "#F596C8",
-    "Renault": "#FFF500",
+    "Red Bull": "#1E41FF",         # F1 TV Blue
+    "Mercedes": "#00D2BE",         # F1 TV Teal
+    "Ferrari": "#E8002D",          # F1 TV Red
+    "McLaren": "#FF8700",          # McLaren Papaya
+    "Aston Martin": "#229971",     # Aston Martin Green
+    "Alpine": "#0090FF",           # Alpine Blue
+    "Alpine F1 Team": "#0090FF",
+    "Williams": "#37BEDD",         # Williams Blue
+    "AlphaTauri": "#2B4562",       # AlphaTauri Dark Blue
+    "RB F1 Team": "#6692FF",       # Visa Cash App RB
+    "Visa Cash App RB": "#6692FF",
+    "Alfa Romeo": "#900000",       # Alfa Romeo Dark Red
+    "Haas F1 Team": "#B6BABD",     # Haas White/Grey
+    "Haas": "#B6BABD",
+    "Racing Point": "#F596C8",     # BWT Pink
+    "Renault": "#FFF500",          # Renault Yellow
     "Toro Rosso": "#469BFF",
     "Force India": "#F596C8",
-    "Sauber": "#52E252",
+    "Sauber": "#52E252",           # Stake Kick Sauber Neon Green
     "Kick Sauber": "#52E252",
 }
 

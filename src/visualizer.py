@@ -87,27 +87,53 @@ def build_animated_chart(
                     f"Lap time: {mins}:{secs:06.3f}"
                 )
 
+            driver_label = driver[:3].upper() if len(driver) > 3 else driver.upper()
+            
+            # 1) The main line trace
             frame_data.append(go.Scatter(
                 x=d_data["lap"].tolist(),
                 y=d_data["position"].tolist(),
                 mode="lines",
-                name=driver[:3].upper() if len(driver) > 3 else driver.upper(),
-                line=dict(color=color, width=2),
+                name=driver_label,
+                line=dict(color=color, width=3),
                 hovertext=hover_texts,
                 hoverinfo="text",
+                legendgroup=driver,
+                showlegend=True,
             ))
 
-        # Add pit stop markers for laps up to current
-        pit_subset = pit_stops[pit_stops["lap"] <= lap]
-        if not pit_subset.empty:
+            # 2) A separate 1-point trace just for the label to avoid flicker
+            x_last = [d_data["lap"].iloc[-1]] if not d_data.empty else []
+            y_last = [d_data["position"].iloc[-1]] if not d_data.empty else []
             frame_data.append(go.Scatter(
-                x=pit_subset["lap"].tolist(),
-                y=pit_subset["position"].tolist(),
+                x=x_last,
+                y=y_last,
+                mode="text",
+                name=f"{driver_label}_label",
+                text=[driver_label] if not d_data.empty else [],
+                textposition="middle right",
+                textfont=dict(color=color, size=14, family="Titillium Web, Arial, sans-serif", weight="bold"),
+                hoverinfo="skip",
+                legendgroup=driver,
+                showlegend=False,
+            ))
+
+            # 3) Pit stop markers assigned to the specific driver's legend group
+            pit_driver_subset = pit_stops[(pit_stops["lap"] <= lap) & (pit_stops["driver_code"] == driver)]
+            
+            # Add explicit IDs so Plotly tracks the markers instead of interpolating them
+            pit_ids = [f"{r['driver_code']}_{r['lap']}" for _, r in pit_driver_subset.iterrows()] if not pit_driver_subset.empty else []
+            
+            frame_data.append(go.Scatter(
+                x=pit_driver_subset["lap"].tolist() if not pit_driver_subset.empty else [],
+                y=pit_driver_subset["position"].tolist() if not pit_driver_subset.empty else [],
+                ids=pit_ids,
                 mode="markers",
-                name="Pit Stop",
-                marker=dict(symbol="triangle-down", size=8, color="#FFD700"),
-                hovertext=[f"Pit stop: {r['driver_code']} Lap {r['lap']}" for _, r in pit_subset.iterrows()],
+                name=f"{driver_label}_pit",
+                marker=dict(symbol="triangle-down", size=8, color="#FFD700", line=dict(color="black", width=1)),
+                hovertext=[f"Pit stop: {r['driver_code']} Lap {r['lap']}" for _, r in pit_driver_subset.iterrows()] if not pit_driver_subset.empty else [],
                 hoverinfo="text",
+                legendgroup=driver,
                 showlegend=False,
             ))
 
@@ -121,50 +147,74 @@ def build_animated_chart(
         frames=frames,
         layout=go.Layout(
             title=dict(
-                text=f"{race_name} {season} — Position",
-                font=dict(color="white", size=20),
+                text=f"<b>{race_name} {season} <span style='color:#E10600'>|</span> Lap Position</b>",
+                font=dict(color="white", size=24, family="Titillium Web, Arial, sans-serif"),
+                x=0.02,
+                y=0.98,
             ),
             xaxis=dict(
-                title="Lap",
-                range=[0, max_lap + 1],
+                title="<b>LAP NUMBER</b>",
+                range=[0, max_lap + 2],  # Extra space for text labels
                 color="white",
-                gridcolor="#333333",
+                gridcolor="#2b2b36",
+                showgrid=True,
+                zeroline=False,
+                tickfont=dict(family="Titillium Web, Arial, sans-serif"),
+                titlefont=dict(family="Titillium Web, Arial, sans-serif", size=14),
             ),
             yaxis=dict(
-                title="Position",
+                title="<b>POSITION</b>",
                 autorange="reversed",
                 range=[0.5, num_drivers + 0.5],
                 dtick=1,
                 color="white",
-                gridcolor="#333333",
+                gridcolor="#2b2b36",
+                showgrid=True,
+                zeroline=False,
+                tickfont=dict(family="Titillium Web, Arial, sans-serif"),
+                titlefont=dict(family="Titillium Web, Arial, sans-serif", size=14),
             ),
-            plot_bgcolor="#1a1a2e",
-            paper_bgcolor="#16213e",
-            font=dict(color="white"),
+            plot_bgcolor="#15151E", # F1 TV Telemetry Dark
+            paper_bgcolor="#15151E",
+            font=dict(color="white", family="Titillium Web, Arial, sans-serif"),
             height=900,
+            hoverlabel=dict(
+                bgcolor="#15151E",
+                font_size=14,
+                font_family="Titillium Web, Arial, sans-serif",
+                bordercolor="#E10600",
+            ),
             legend=dict(
-                bgcolor="rgba(0,0,0,0.5)",
-                font=dict(color="white", size=13),
-                orientation="h",
+                title=dict(
+                    text="<b>DRIVERS</b><br><span style='font-size:13px; color:#A0A0A0;'>(Click to toggle)</span>", 
+                    font=dict(color="white", size=18)
+                ),
+                bgcolor="rgba(21, 21, 30, 0.8)",
+                bordercolor="#E10600",
+                borderwidth=2,
+                font=dict(color="white", size=15, family="Titillium Web, Arial, sans-serif"),
+                orientation="v",
                 yanchor="top",
-                y=-0.08,
-                xanchor="center",
-                x=0.5,
+                y=1,
+                xanchor="left",
+                x=1.02,
                 itemclick="toggle",
                 itemdoubleclick="toggleothers",
-                itemwidth=30,
                 traceorder="normal",
             ),
-            margin=dict(b=120),
+            margin=dict(l=60, r=160, t=100, b=120),
             updatemenus=[dict(
                 type="buttons",
                 showactive=False,
-                y=1.15,
-                x=0.5,
-                xanchor="center",
+                direction="right",
+                y=-0.12,
+                x=0.08,
+                xanchor="right",
+                yanchor="top",
+                pad={"r": 10, "t": 0, "l": 0, "b": 0},
                 buttons=[
                     dict(
-                        label="▶ Play",
+                        label="<b>▶  PLAY</b>",
                         method="animate",
                         args=[None, {
                             "frame": {"duration": 150, "redraw": True},
@@ -173,7 +223,7 @@ def build_animated_chart(
                         }],
                     ),
                     dict(
-                        label="⏸ Pause",
+                        label="<b>⏸  PAUSE</b>",
                         method="animate",
                         args=[[None], {
                             "frame": {"duration": 0, "redraw": False},
@@ -182,9 +232,16 @@ def build_animated_chart(
                         }],
                     ),
                 ],
+                bgcolor="rgba(21, 21, 30, 0.8)",
+                font=dict(color="#E10600", family="Titillium Web, Arial, sans-serif", size=14),
+                bordercolor="#E10600",
+                borderwidth=2,
             )],
             sliders=[dict(
                 active=0,
+                y=-0.12,
+                yanchor="top",
+                xanchor="left",
                 steps=[
                     dict(
                         args=[[str(lap)], {"frame": {"duration": 150, "redraw": True},
@@ -195,10 +252,12 @@ def build_animated_chart(
                     )
                     for lap in range(1, max_lap + 1)
                 ],
-                x=0.05,
+                x=0.1,
                 len=0.9,
-                currentvalue=dict(prefix="Lap: ", font=dict(color="white")),
-                font=dict(color="white"),
+                currentvalue=dict(prefix="LAP: ", font=dict(color="#E10600", family="Titillium Web, Arial, sans-serif", size=16)),
+                font=dict(color="white", family="Titillium Web, Arial, sans-serif"),
+                bgcolor="#2b2b36",
+                bordercolor="#E10600",
             )],
         ),
     )
@@ -213,5 +272,13 @@ def export_html(fig: go.Figure, path: str) -> str:
     """
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    fig.write_html(str(p), include_plotlyjs=True, full_html=True)
+    
+    # Write the figure to HTML. We disable auto_play so it doesn't run infinitely automatically
+    # We also embed plotly.js to make it entirely standalone
+    fig.write_html(
+        str(p), 
+        include_plotlyjs="cdn", # Use CDN to make file size much smaller (around 3MB instead of 10MB+)
+        full_html=True,
+        auto_play=False
+    )
     return str(p.resolve())
