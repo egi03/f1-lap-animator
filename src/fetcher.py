@@ -130,6 +130,7 @@ def fetch_race_result(season: int, round_num: int) -> list[dict[str, Any]]:
         constructor = r["Constructor"]
         results.append({
             "position": int(r["position"]),
+            "driver_id": driver["driverId"],
             "driver_code": driver.get("code", driver["familyName"][:3].upper()),
             "driver_name": f"{driver['givenName']} {driver['familyName']}",
             "team": constructor["name"],

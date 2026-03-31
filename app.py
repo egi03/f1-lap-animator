@@ -75,12 +75,10 @@ if st.session_state.get("load_race"):
         st.warning("No lap time data could be parsed for this race.")
         st.stop()
 
-    # Map driverId → code and team from results
-    id_to_code = {}
-    id_to_team = {}
-    for r in results:
-        id_to_code[r["driver_code"]] = r["driver_code"]
-        id_to_team[r["driver_code"]] = r["team"]
+    # Map driverId (used in lap data) → 3-letter code (from results)
+    id_to_code = {r["driver_id"]: r["driver_code"] for r in results}
+    id_to_team = {r["driver_code"]: r["team"] for r in results}
+    df["driver_code"] = df["driver_code"].map(id_to_code).fillna(df["driver_code"])
 
     df = compute_cumulative_times(df)
     df = compute_gap_to_leader(df)
