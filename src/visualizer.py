@@ -8,11 +8,36 @@ import plotly.graph_objects as go
 
 
 def _detect_pit_stops(df: pd.DataFrame) -> pd.DataFrame:
-    """Detect likely pit stops where lap time exceeds 120% of driver's median."""
+    """Detect likely pit stops where lap time exceeds 120% of driver's median.
+
+    Only marks the first lap of consecutive slow sequences per driver,
+    filtering out safety car periods where most drivers are slow together.
+    """
     medians = df.groupby("driver_code")["lap_time_seconds"].median().rename("median_time")
     merged = df.merge(medians, on="driver_code")
-    pit_stops = merged[merged["lap_time_seconds"] > merged["median_time"] * 1.2].copy()
-    return pit_stops[["driver_code", "lap", "position"]]
+    slow = merged[merged["lap_time_seconds"] > merged["median_time"] * 1.2].copy()
+
+    # Filter out laps where most of the grid is slow (safety car)
+    drivers_per_lap = df.groupby("lap")["driver_code"].nunique()
+    slow_per_lap = slow.groupby("lap")["driver_code"].nunique()
+    sc_laps = set()
+    for lap, count in slow_per_lap.items():
+        total = drivers_per_lap.get(lap, 1)
+        if count / total > 0.5:
+            sc_laps.add(lap)
+    slow = slow[~slow["lap"].isin(sc_laps)]
+
+    # Keep only the first lap of consecutive slow sequences per driver
+    rows = []
+    for driver, group in slow.sort_values("lap").groupby("driver_code"):
+        laps = group["lap"].tolist()
+        for i, lap in enumerate(laps):
+            if i == 0 or lap > laps[i - 1] + 1:
+                rows.append(group[group["lap"] == lap].iloc[0])
+
+    if not rows:
+        return pd.DataFrame(columns=["driver_code", "lap", "position"])
+    return pd.DataFrame(rows)[["driver_code", "lap", "position"]]
 
 
 def build_animated_chart(
