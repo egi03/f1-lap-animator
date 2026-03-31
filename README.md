@@ -1,38 +1,32 @@
-# F1 Lap Delta Animator
+# F1 Race Flow
 
-Visualize the gap between every driver and the race leader across all laps as an animated interactive chart.
+An interactive web application that fetches Formula 1 data and visualizes the lap-by-lap race position progression using authentic F1 broadcast styling.
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
-![Plotly](https://img.shields.io/badge/Plotly-5.18-purple?logo=plotly)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.29-red?logo=streamlit)
+![F1 Race Flow Animation](preview.gif)
 
-## Preview
+## Features
 
-[GIF coming soon — run locally and use screentogif]
+- **Lap-by-Lap Animation**: Watch the grid's positions evolve over the course of the race.
+- **Interactive Controls**: Play, pause, scrub through laps, and click driver names to isolate specific rivalries.
+- **Pit Stop Tracking**: Automatically detects and accurately plots pit stops on the timeline as warning triangles.
+- **HTML Export**: Save any generated race visualization as a standalone interactive HTML file.
 
-## How it works
+## Quick Start
 
-- **Pick any F1 race** from 1996–2024 using the sidebar dropdown or featured race presets
-- **Watch the gap chart animate** lap by lap, showing each driver's time delta to the race leader with pit stop markers
-- **Export the chart** as a standalone HTML file to share with anyone
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Installation
+2. **Run the application:**
+   ```bash
+   streamlit run app.py
+   ```
+   *Then open `http://localhost:8501` in your browser!*
 
-```bash
-pip install -r requirements.txt
-```
+## Data Source
 
-## Usage
-
-```bash
-streamlit run app.py
-```
-
-Then open http://localhost:8501 in your browser. Select a season and race from the sidebar, or click a Featured Race to jump straight in.
-
-## Data source
-
-All race data is provided by the [Ergast Developer API](http://ergast.com/mrd/) via the [Jolpica mirror](https://api.jolpi.ca/ergast/).
+All race data is provided by the [Ergast Developer API](http://ergast.com/mrd/) (via the [Jolpica mirror](https://api.jolpi.ca/ergast/)).
 
 ## License
 
