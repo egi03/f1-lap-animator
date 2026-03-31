@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 
 from src.fetcher import fetch_seasons, fetch_race_schedule, fetch_lap_times, fetch_race_result
-from src.processor import parse_lap_times, compute_cumulative_times, compute_gap_to_leader, get_driver_colors
+from src.processor import parse_lap_times, compute_cumulative_times, compute_positions, get_driver_colors
 from src.visualizer import build_animated_chart, export_html
 
 st.set_page_config(page_title="F1 Lap Delta Animator", layout="wide")
@@ -81,7 +81,7 @@ if st.session_state.get("load_race"):
     df["driver_code"] = df["driver_code"].map(id_to_code).fillna(df["driver_code"])
 
     df = compute_cumulative_times(df)
-    df = compute_gap_to_leader(df)
+    df = compute_positions(df)
 
     driver_teams = {d: id_to_team.get(d, "") for d in df["driver_code"].unique()}
     colors = get_driver_colors(df["driver_code"].unique().tolist(), driver_teams)

@@ -66,16 +66,13 @@ def compute_cumulative_times(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def compute_gap_to_leader(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute each driver's gap to the race leader at each lap.
+def compute_positions(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute each driver's race position at each lap.
 
-    Leader = driver with lowest cumulative time at each lap.
-    Returns DataFrame with added gap_to_leader column.
+    Position is determined by ranking cumulative time (lowest = P1).
+    Returns DataFrame with added position column.
     """
-    leader_times = df.groupby("lap")["cumulative_time"].min().rename("leader_time")
-    df = df.merge(leader_times, on="lap")
-    df["gap_to_leader"] = df["cumulative_time"] - df["leader_time"]
-    df = df.drop(columns=["leader_time"])
+    df["position"] = df.groupby("lap")["cumulative_time"].rank(method="min").astype(int)
     return df
 
 

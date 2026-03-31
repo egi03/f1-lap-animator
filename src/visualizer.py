@@ -12,7 +12,7 @@ def _detect_pit_stops(df: pd.DataFrame) -> pd.DataFrame:
     medians = df.groupby("driver_code")["lap_time_seconds"].median().rename("median_time")
     merged = df.merge(medians, on="driver_code")
     pit_stops = merged[merged["lap_time_seconds"] > merged["median_time"] * 1.2].copy()
-    return pit_stops[["driver_code", "lap", "gap_to_leader"]]
+    return pit_stops[["driver_code", "lap", "position"]]
 
 
 def build_animated_chart(
@@ -22,22 +22,18 @@ def build_animated_chart(
     driver_colors: dict[str, str],
     season: int,
 ) -> go.Figure:
-    """Build an animated Plotly gap chart with lap-by-lap reveal.
+    """Build an animated Plotly position chart with lap-by-lap reveal.
 
     Each frame adds one more lap, showing lines growing across the chart.
     """
     drivers = gap_df["driver_code"].unique().tolist()
     max_lap = int(gap_df["lap"].max())
+    num_drivers = len(drivers)
 
     # Build driver lookup
     info_map = {}
     for d in driver_info:
         info_map[d["driver_code"]] = d
-
-    # Map driverId to 3-letter code from results
-    driver_id_to_code = {}
-    for d in driver_info:
-        driver_id_to_code[d.get("driver_code", "")] = d.get("driver_code", "")
 
     pit_stops = _detect_pit_stops(gap_df)
 
@@ -62,13 +58,13 @@ def build_animated_chart(
                 mins = int(lt // 60)
                 secs = lt % 60
                 hover_texts.append(
-                    f"{name}<br>Team: {team}<br>Gap: +{row['gap_to_leader']:.3f}s<br>"
+                    f"{name}<br>Team: {team}<br>Position: P{int(row['position'])}<br>"
                     f"Lap time: {mins}:{secs:06.3f}"
                 )
 
             frame_data.append(go.Scatter(
                 x=d_data["lap"].tolist(),
-                y=d_data["gap_to_leader"].tolist(),
+                y=d_data["position"].tolist(),
                 mode="lines",
                 name=driver[:3].upper() if len(driver) > 3 else driver.upper(),
                 line=dict(color=color, width=2),
@@ -81,7 +77,7 @@ def build_animated_chart(
         if not pit_subset.empty:
             frame_data.append(go.Scatter(
                 x=pit_subset["lap"].tolist(),
-                y=pit_subset["gap_to_leader"].tolist(),
+                y=pit_subset["position"].tolist(),
                 mode="markers",
                 name="Pit Stop",
                 marker=dict(symbol="triangle-down", size=8, color="#FFD700"),
@@ -100,7 +96,7 @@ def build_animated_chart(
         frames=frames,
         layout=go.Layout(
             title=dict(
-                text=f"{race_name} {season} — Gap to Leader",
+                text=f"{race_name} {season} — Position",
                 font=dict(color="white", size=20),
             ),
             xaxis=dict(
@@ -110,8 +106,10 @@ def build_animated_chart(
                 gridcolor="#333333",
             ),
             yaxis=dict(
-                title="Gap to Leader (seconds)",
+                title="Position",
                 autorange="reversed",
+                range=[0.5, num_drivers + 0.5],
+                dtick=1,
                 color="white",
                 gridcolor="#333333",
             ),
