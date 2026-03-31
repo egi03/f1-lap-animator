@@ -6,6 +6,7 @@ An interactive web application that fetches Formula 1 data and visualizes the la
 
 ## Features
 
+- **Extensive History**: Access and visualize data from every Formula 1 Grand Prix from **1996 through 2024**.
 - **Lap-by-Lap Animation**: Watch the grid's positions evolve over the course of the race.
 - **Interactive Controls**: Play, pause, scrub through laps, and click driver names to isolate specific rivalries.
 - **Pit Stop Tracking**: Automatically detects and accurately plots pit stops on the timeline as warning triangles.
