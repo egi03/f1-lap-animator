@@ -32,7 +32,7 @@ Then open http://localhost:8501 in your browser. Select a season and race from t
 
 ## Data source
 
-All race data is provided by the [Ergast Developer API](http://ergast.com/mrd/).
+All race data is provided by the [Ergast Developer API](http://ergast.com/mrd/) via the [Jolpica mirror](https://api.jolpi.ca/ergast/).
 
 ## License
 
